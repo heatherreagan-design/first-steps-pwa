@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111110">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="First Steps">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <title>First Steps</title>
+  <style>
+    /* ── Reset & Root ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --black:    #111110;
+      --dark:     #1e1d1b;
+      --mid:      #2e2c29;
+      --gray:     #706858;
+      --tan:      #9e9082;
+      --sand:     #c4b49a;
+      --cream:    #e8d9b5;
+      --gold:     #c9a96e;
+      --gold-lt:  #dfc48e;
+      --white:    #f5f0e8;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      height: 100%;
+      background: var(--black);
+      color: var(--white);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Screen System ── */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--dark);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+      overflow: hidden;
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Scrollable body within a screen ── */
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 150px;
+    }
+    .scroll-body::-webkit-scrollbar { display: none; }
+
+    /* ── Install Bar (fixed bottom) ── */
+    #install-bar-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+    }
+    #install-bar-wrap.hidden { display: none; }
+
+    /* ─────────────────────────────────────────
+       ONBOARDING SCREEN
+    ───────────────────────────────────────── */
+    #screen-onboard {
+      background: var(--black);
+      justify-content: center;
+      align-items: center;
+      padding: 40px 28px;
+      padding-top: calc(40px + var(--safe-top));
+    }
+    .ob-inner { width: 100%; max-width: 360px; }
+    .ob-brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .ob-logo-img {
+      width: 88px;
+      height: 88px;
+      object-fit: contain;
+      margin: 0 auto 14px;
+      display: block;
+    }
+    .ob-church {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--tan);
+      font-weight: 700;
+    }
+    .ob-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--white);
+      margin-top: 6px;
+      letter-spacing: -1px;
+    }
+    .ob-gold-line {
+      width: 48px;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 1px;
+      margin: 14px auto 0;
+    }
+    .ob-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .ob-input {
+      width: 100%;
+      background: var(--mid);
+      border: 1px solid rgba(201,169,110,0.2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      color: var(--white);
+      outline: none;
+      margin-bottom: 20px;
+      -webkit-appearance: none;
+    }
+    .ob-input::placeholder { color: var(--gray); }
+    .ob-input:focus { border-color: var(--gold); }
+    .ob-week-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+      display: block;
+    }
+    .ob-week-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .ob-week-btn {
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 12px 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--tan);
+      cursor: pointer;
+      text-align: center;
+      -webkit-appearance: none;
+    }
+    .ob-week-btn.selected {
+      background: var(--gold);
+      color: var(--black);
+      border-color: var(--gold);
+    }
+    .ob-start-btn {
+      width: 100%;
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      -webkit-appearance: none;
+    }
+    .ob-verse {
+      font-size: 11px;
+      color: var(--gray);
+      text-align: center;
+      margin-top: 24px;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* ─────────────────────────────────────────
+       HOME SCREEN
+    ───────────────────────────────────────── */
+    .home-header {
+      background: var(--black);
+      padding: 20px 20px 18px;
+      padding-top: calc(20px + var(--safe-top));
+      flex-shrink: 0;
+    }
+    .home-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .home-greeting { font-size: 11px; color: var(--tan); letter-spacing: 0.3px; }
+    .home-name { font-size: 20px; font-weight: 800; color: var(--white); margin-top: 2px; }
+    .header-avatar {
+      width: 40px; height: 40px;
+      background: var(--mid);
+      border-radius: 50%;
+      border: 1.5px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .progress-pips { display: flex; gap: 5px; margin-bottom: 6px; }
+    .pip {
+      height: 3px; flex: 1; border-radius: 2px;
+      background: var(--mid);
+      transition: background 0.3s;
+    }
+    .pip.done { background: var(--gold); }
+    .pip.active { background: var(--gold-lt); }
+    .progress-label { font-size: 13px; color: var(--tan); }
+    .progress-label strong { color: var(--cream); }
+
+    /* Home content */
+    .home-content { padding: 14px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* This Week Card */
+    .this-week-card {
+      background: var(--mid);
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(201,169,110,0.15);
+    }
+    .card-eyebrow {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); font-weight: 700; margin-bottom: 6px;
+    }
+    .week-card-title { font-size: 22px; font-weight: 800; color: var(--white); line-height: 1.1; }
+    .week-card-sub { font-size: 13px; color: var(--tan); margin-top: 3px; margin-bottom: 14px; font-style: italic; }
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .quick-btn {
+      background: var(--dark);
+      border-radius: 12px;
+      padding: 12px 6px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      border: 1px solid rgba(201,169,110,0.1);
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+    .quick-btn:active { opacity: 0.75; }
+    .quick-icon { font-size: 22px; line-height: 1; }
+    .quick-label { font-size: 10px; font-weight: 700; color: var(--sand); text-align: center; line-height: 1.2; }
+
+    /* Section header */
+    .section-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 2px 2px 0;
+    }
+    .section-title { font-size: 14px; font-weight: 700; color: var(--cream); }
+
+    /* Week rows */
+    .week-row {
+      background: var(--mid);
+      border-radius: 14px;
+      padding: 13px 14px;
+      display: flex; align-items: center; gap: 12px;
+      border: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer;
+    }
+    .week-row:active { opacity: 0.8; }
+    .week-row.active-week {
+      border-color: rgba(201,169,110,0.3);
+      background: #262420;
+    }
+    .week-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; flex-shrink: 0;
+    }
+    .week-dot.done { background: rgba(201,169,110,0.15); color: var(--gold); font-size: 17px; }
+    .week-dot.active { background: var(--gold); color: var(--black); }
+    .week-dot.future { background: var(--dark); color: var(--gray); border: 1.5px solid rgba(255,255,255,0.08); }
+    .week-info { flex: 1; min-width: 0; }
+    .week-name { font-size: 13px; font-weight: 700; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .week-status { font-size: 12px; color: var(--tan); margin-top: 2px; }
+    .week-status.in-progress { color: var(--gold); font-weight: 600; }
+    .week-arrow { font-size: 16px; color: var(--gray); flex-shrink: 0; }
+
+    /* Verse card */
+    .verse-card {
+      background: var(--black);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(201,169,110,0.2);
+    }
+    .verse-text { font-size: 15px; color: var(--sand); line-height: 1.75; font-style: italic; }
+    .verse-ref-row {
+      font-size: 10px; color: var(--gold); font-weight: 700;
+      margin-top: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .verse-share-btn {
+      font-size: 10px; color: var(--tan);
+      background: none; border: none; cursor: pointer; padding: 0;
+    }
+
+    /* ─────────────────────────────────────────
+       WEEK DETAIL SCREEN
+    ───────────────────────────────────────── */
+    .detail-header {
+      background: var(--black);
+      padding: 16px 20px 14px;
+      padding-top: calc(16px + var(--safe-top));
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .back-btn {
+      background: rgba(201,169,110,0.12);
+      border: 1px solid rgba(201,169,110,0.25);
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      -webkit-appearance: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .back-btn:active { opacity: 0.75; }
+    .detail-header-text { flex: 1; }
+    .detail-eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    .detail-title { font-size: 18px; font-weight: 800; color: var(--white); margin-top: 2px; }
+    .detail-sub { font-size: 13px; color: var(--tan); margin-top: 1px; font-style: italic; }
+
+    .detail-content { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Action checklist */
+    .checklist-card {
+      background: var(--mid);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(201,169,110,0.1);
+    }
+    .checklist-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+    }
+    .check-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+    .check-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .check-item:first-child { padding-top: 0; }
+    .check-box {
+      width: 22px; height: 22px; border-radius: 7px;
+      border: 1.5px solid var(--gray);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .check-box.checked { background: var(--gold); border-color: var(--gold); }
+    .check-checkmark { font-size: 13px; color: var(--black); opacity: 0; transition: opacity 0.15s; }
+    .check-box.checked .check-checkmark { opacity: 1; }
+    .check-text { font-size: 15px; color: var(--cream); line-height: 1.5; flex: 1; }
+    .check-text.done { color: var(--gray); text-decoration: line-through; }
+
+    /* RAP quick card on week detail */
+    .rap-inline-card {
+      background: var(--black);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(201,169,110,0.2);
+      cursor: pointer;
+    }
+    .rap-inline-card:active { opacity: 0.8; }
+    .rap-inline-title { font-size: 12px; font-weight: 800; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.5px; }
+    .rap-row { font-size: 12px; color: var(--tan); line-height: 1.7; }
+    .rap-row strong { color: var(--cream); }
+    .rap-tap-hint {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gold);
+      border: 1px solid rgba(201,169,110,0.35);
+      border-radius: 20px;
+      padding: 7px 16px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Baptism card */
+    .info-card {
+      background: var(--mid);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .info-card-title { font-size: 14px; font-weight: 800; color: var(--cream); margin-bottom: 8px; }
+    .info-card-body { font-size: 14px; color: var(--tan); line-height: 1.7; }
+    .info-link {
+      display: inline-block; margin-top: 10px;
+      font-size: 11px; font-weight: 700; color: var(--gold);
+      background: rgba(201,169,110,0.1);
+      padding: 8px 14px; border-radius: 20px;
+      text-decoration: none;
+    }
+
+    /* Verse list on week detail */
+    .verse-list { display: flex; flex-direction: column; gap: 10px; }
+    .verse-pill {
+      background: var(--mid);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+    .verse-pill:active { opacity: 0.8; }
+    .verse-pill-ref { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 5px; }
+    .verse-pill-text { font-size: 14px; color: var(--sand); line-height: 1.6; font-style: italic; }
+    .verse-pill-copy { font-size: 12px; color: var(--gray); margin-top: 6px; }
+
+    /* ─────────────────────────────────────────
+       SHARED SCREEN HEADER (RAP / VERSES / RESOURCES)
+    ───────────────────────────────────────── */
+    .screen-header {
+      background: var(--black);
+      padding: 14px 20px 16px;
+      padding-top: calc(14px + var(--safe-top));
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .screen-header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .home-btn {
+      background: rgba(201,169,110,0.12);
+      border: 1px solid rgba(201,169,110,0.25);
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      -webkit-appearance: none;
+      white-space: nowrap;
+    }
+    .home-btn:active { opacity: 0.75; }
+
+    /* ─────────────────────────────────────────
+       RAP SCREEN
+    ───────────────────────────────────────── */
+    .rap-header {
+      background: var(--black);
+      padding: 14px 20px 16px;
+      padding-top: calc(14px + var(--safe-top));
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .rap-header-top {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .rap-header-eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    .rap-header-title { font-size: 26px; font-weight: 800; color: var(--white); margin-top: 4px; }
+    .rap-header-sub { font-size: 14px; color: var(--tan); margin-top: 4px; font-style: italic; }
+
+    .rap-content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .rap-step {
+      background: var(--mid);
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .rap-step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .rap-letter {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--gold); color: var(--black);
+      font-size: 18px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .rap-step-name { font-size: 16px; font-weight: 800; color: var(--white); }
+    .rap-step-sub { font-size: 13px; color: var(--tan); margin-top: 1px; }
+    .rap-prompt {
+      background: var(--black);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      color: var(--white);
+      font-style: italic;
+      line-height: 1.6;
+      border-left: 3px solid var(--gold);
+    }
+    .rap-note { font-size: 13px; color: var(--white); margin-top: 10px; line-height: 1.6; }
+
+    .rap-remember {
+      background: var(--black);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(201,169,110,0.2);
+    }
+    .rap-remember-title { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 0.5px; margin-bottom: 10px; }
+    .rap-remember-item { font-size: 14px; color: var(--cream); padding: 4px 0; line-height: 1.5; }
+    .rap-remember-item::before { content: "· "; color: var(--gold); }
+
+    /* ─────────────────────────────────────────
+       VERSE LIBRARY SCREEN
+    ───────────────────────────────────────── */
+    .verses-header {
+      background: var(--black);
+      padding: 20px 20px 18px;
+      padding-top: calc(20px + var(--safe-top));
+      flex-shrink: 0;
+    }
+    .verses-header-eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    .verses-header-title { font-size: 24px; font-weight: 800; color: var(--white); margin-top: 4px; }
+    .verses-header-sub { font-size: 12px; color: var(--tan); margin-top: 4px; font-style: italic; }
+
+    .verses-content { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .verses-section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+    }
+    .copy-toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%; transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--black);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    .copy-toast.show { opacity: 1; }
+
+    /* ── Install Bar ── */
+    #install-bar {
+      background: var(--black);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #install-bar.hidden { display: none; }
+    .install-bar-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--mid);
+      border: 1px solid rgba(201,169,110,0.2);
+      border-radius: 14px;
+      padding: 10px 20px;
+      width: 100%;
+      max-width: 340px;
+    }
+    .install-bar-logo {
+      width: 32px; height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .install-bar-text {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .install-bar-arrow {
+      margin-left: auto;
+      font-size: 16px;
+      color: var(--gold);
+    }
+
+    /* ── Install Modal ── */
+    #install-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: var(--safe-bot);
+    }
+    #install-modal.hidden { display: none; }
+    .install-modal-box {
+      background: var(--dark);
+      border-radius: 24px 24px 0 0;
+      padding: 28px 24px 32px;
+      width: 100%;
+      max-width: 480px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .install-modal-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .install-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .install-modal-icon {
+      width: 60px; height: 60px;
+      border-radius: 14px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .install-modal-app-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--white);
+    }
+    .install-modal-app-sub {
+      font-size: 12px;
+      color: var(--tan);
+      margin-top: 2px;
+    }
+    .install-steps {
+      background: var(--mid);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .install-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 14px;
+      color: var(--cream);
+      line-height: 1.5;
+    }
+    .install-step:last-child { border-bottom: none; }
+    .install-step-num {
+      width: 24px; height: 24px;
+      background: var(--gold);
+      color: var(--black);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .install-step-icon { font-size: 18px; flex-shrink: 0; }
+    .install-found {
+      font-size: 12px;
+      color: var(--tan);
+      text-align: center;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .install-btn-done {
+      width: 100%;
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .install-btn-cancel {
+      width: 100%;
+      background: none;
+      color: var(--tan);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+    .install-safari-note {
+      font-size: 11px;
+      color: var(--gray);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* ─────────────────────────────────────────
+       RESOURCES SCREEN
+    ───────────────────────────────────────── */
+    .resources-header {
+      background: var(--black);
+      padding: 20px 20px 18px;
+      padding-top: calc(20px + var(--safe-top));
+      flex-shrink: 0;
+    }
+    .resources-header-eyebrow { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    .resources-header-title { font-size: 24px; font-weight: 800; color: var(--white); margin-top: 4px; }
+
+    .resources-content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .resource-card {
+      background: var(--mid);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .resource-card-icon { font-size: 28px; margin-bottom: 8px; }
+    .resource-card-title { font-size: 14px; font-weight: 800; color: var(--cream); margin-bottom: 6px; }
+    .resource-card-body { font-size: 14px; color: var(--tan); line-height: 1.6; }
+    .resource-link {
+      display: inline-block; margin-top: 10px;
+      font-size: 12px; font-weight: 700; color: var(--black);
+      background: var(--gold);
+      padding: 9px 16px; border-radius: 20px;
+      text-decoration: none;
+    }
+    .reset-btn {
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 13px;
+      padding: 16px;
+      color: var(--tan);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      margin-top: 8px;
+      display: block;
+    }
+    .stay-connected-list { margin-top: 8px; }
+    .stay-connected-item {
+      font-size: 14px; color: var(--tan);
+      padding: 5px 0; line-height: 1.5;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .stay-connected-item:last-child { border-bottom: none; }
+    .stay-connected-item::before { content: "→ "; color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     ONBOARDING SCREEN
+══════════════════════════════════════ -->
+<div id="screen-onboard" class="screen active">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 28px;padding-top:calc(40px + var(--safe-top));overflow-y:auto;">
+    <div class="ob-inner">
+      <div class="ob-brand">
+        <img class="ob-logo-img" src="/icons/hf-logo.png" alt="Harrison Faith Church">
+        <div class="ob-church">Harrison Faith Church</div>
+        <div class="ob-title">First Steps</div>
+        <div class="ob-gold-line"></div>
+      </div>
+
+      <label class="ob-label">Your name</label>
+      <input class="ob-input" id="ob-maker" type="text" placeholder="Your first name" autocomplete="given-name">
+
+      <label class="ob-label">You're Disciple:</label>
+      <input class="ob-input" id="ob-disciple" type="text" placeholder="Their first name" autocomplete="off">
+
+      <span class="ob-week-label">Starting on week</span>
+      <div class="ob-week-grid">
+        <button class="ob-week-btn selected" data-week="1" onclick="selectWeek(1)">Week 1</button>
+        <button class="ob-week-btn" data-week="2" onclick="selectWeek(2)">Week 2</button>
+        <button class="ob-week-btn" data-week="3" onclick="selectWeek(3)">Week 3</button>
+        <button class="ob-week-btn" data-week="4" onclick="selectWeek(4)">Week 4</button>
+      </div>
+
+      <button class="ob-start-btn" onclick="startApp()">Let's Go →</button>
+      <div class="ob-verse">"There is more joy in heaven over one lost sinner who repents than over ninety-nine others who are righteous." — Luke 15:7</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HOME SCREEN
+══════════════════════════════════════ -->
+<div id="screen-home" class="screen">
+  <div class="home-header">
+    <div class="home-header-top">
+      <div>
+        <div class="home-greeting">You're discipling</div>
+        <div class="home-name" id="home-name">—</div>
+      </div>
+      <div class="header-avatar" onclick="navigate('resources')" title="Resources">🕊️</div>
+    </div>
+    <div class="progress-pips" id="progress-pips"></div>
+    <div class="progress-label" id="progress-label"></div>
+  </div>
+  <div class="scroll-body">
+    <div class="home-content">
+      <!-- This Week Card -->
+      <div class="this-week-card">
+        <div class="card-eyebrow">This Week's Focus</div>
+        <div class="week-card-title" id="week-card-title">—</div>
+        <div class="week-card-sub" id="week-card-sub">—</div>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="navigate('rap')">
+            <div class="quick-icon">🙏</div>
+            <div class="quick-label">RAP Guide</div>
+          </button>
+          <button class="quick-btn" id="btn-verse" onclick="showVerseShare()">
+            <div class="quick-icon">📖</div>
+            <div class="quick-label">Send Verse</div>
+          </button>
+          <button class="quick-btn" id="btn-actions" onclick="openCurrentWeek()">
+            <div class="quick-icon">✅</div>
+            <div class="quick-label">Actions</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Journey -->
+      <div class="section-row">
+        <div class="section-title">Your Journey</div>
+      </div>
+      <div id="week-list"></div>
+
+      <!-- Verse of the week -->
+      <div class="verse-card" id="home-verse-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     WEEK DETAIL SCREEN
+══════════════════════════════════════ -->
+<div id="screen-week" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="navigate('home')">‹ Home</button>
+    <div class="detail-header-text">
+      <div class="detail-eyebrow" id="detail-eyebrow">Week —</div>
+      <div class="detail-title" id="detail-title">—</div>
+      <div class="detail-sub" id="detail-sub">—</div>
+    </div>
+  </div>
+  <div class="scroll-body">
+    <div class="detail-content" id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     RAP SCREEN
+══════════════════════════════════════ -->
+<div id="screen-rap" class="screen">
+  <div class="rap-header">
+    <div class="rap-header-top">
+      <button class="home-btn" id="rap-back-btn" onclick="rapBack()">‹ Home</button>
+    </div>
+    <div class="rap-header-eyebrow">Conversation Guide</div>
+    <div class="rap-header-title">RAP</div>
+    <div class="rap-header-sub">Review · Apply · Pray</div>
+  </div>
+  <div class="scroll-body">
+    <div class="rap-content">
+      <div class="rap-step">
+        <div class="rap-step-header">
+          <div class="rap-letter">R</div>
+          <div>
+            <div class="rap-step-name">Review</div>
+            <div class="rap-step-sub">What did God say?</div>
+          </div>
+        </div>
+        <div class="rap-prompt">"What did God say to you this week?"</div>
+        <div class="rap-note">Let them share what stood out from Scripture or life. Listen more than you speak. Ask follow-up questions to draw them out.</div>
+      </div>
+
+      <div class="rap-step">
+        <div class="rap-step-header">
+          <div class="rap-letter">A</div>
+          <div>
+            <div class="rap-step-name">Apply</div>
+            <div class="rap-step-sub">How does it connect?</div>
+          </div>
+        </div>
+        <div class="rap-prompt">"How does that intersect with your life right now?"</div>
+        <div class="rap-note">Help them see God's Word as practical and personal — not just information. Bridge Scripture to their real circumstances.</div>
+      </div>
+
+      <div class="rap-step">
+        <div class="rap-step-header">
+          <div class="rap-letter">P</div>
+          <div>
+            <div class="rap-step-name">Pray</div>
+            <div class="rap-step-sub">Pray about the application</div>
+          </div>
+        </div>
+        <div class="rap-prompt">"Let's pray together about what you just shared."</div>
+        <div class="rap-note">Pray specifically about their application — not a generic list of requests. Model conversational, faith-filled prayer.</div>
+      </div>
+
+      <div class="rap-remember">
+        <div class="rap-remember-title">Things to Remember</div>
+        <div class="rap-remember-item">Keep it simple</div>
+        <div class="rap-remember-item">Ask the Holy Spirit to guide what to say and how to say it</div>
+        <div class="rap-remember-item">Remember it's a marathon, not a sprint</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VERSE LIBRARY SCREEN
+══════════════════════════════════════ -->
+<div id="screen-verses" class="screen">
+  <div class="verses-header">
+    <div class="rap-header-top">
+      <button class="home-btn" onclick="navigate('home')">‹ Home</button>
+    </div>
+    <div class="verses-header-eyebrow">Verse Library</div>
+    <div class="verses-header-title">Passages to Share</div>
+    <div class="verses-header-sub">Tap any verse to copy it</div>
+  </div>
+  <div class="scroll-body">
+    <div class="verses-content" id="verses-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     RESOURCES SCREEN
+══════════════════════════════════════ -->
+<div id="screen-resources" class="screen">
+  <div class="resources-header">
+    <div class="rap-header-top">
+      <button class="home-btn" onclick="navigate('home')">‹ Home</button>
+    </div>
+    <div class="resources-header-eyebrow">Resources</div>
+    <div class="resources-header-title">Help & Info</div>
+  </div>
+  <div class="scroll-body">
+    <div class="resources-content">
+
+      <div class="resource-card">
+        <div class="resource-card-icon">📘</div>
+        <div class="resource-card-title">You Said Yes</div>
+        <div class="resource-card-body">A 21-day guide to help new believers understand their new life in Christ. Encourage them to read it and ask questions.</div>
+        <a class="resource-link" href="https://www.bible.com/reading-plans/47309-you-said-yes-how-do-i-start-my-new-life-with-jesus" target="_blank">Open Guide →</a>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-card-icon">💧</div>
+        <div class="resource-card-title">What is Baptism?</div>
+        <div class="resource-card-body">Baptism is a public declaration of following Jesus. Going under water symbolizes Jesus' death and burial; being raised out is a picture of dying to our old lives and being brought into new life with Him.<br><br>God still takes great joy when His children are baptized — just as He did when Jesus was baptized in Matthew 3:13-17.</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button onclick="shareBaptismLink()" style="flex:1;background:var(--gold);color:var(--black);border:none;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:800;cursor:pointer;min-width:140px;">Send Baptism Link →</button>
+        <a href="https://app.biblearc.com/version/csb/MAT/3?range=40003013-40003017" target="_blank" style="flex:1;background:var(--mid);color:var(--gold);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;min-width:120px;">Matthew 3:13-17</a>
+      </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-card-icon">📖</div>
+        <div class="resource-card-title">Places to Start</div>
+        <div class="resource-card-body">Great starting points for a new believer:</div>
+        <div class="stay-connected-list">
+          <div class="stay-connected-item">Book of John — foundation of faith</div>
+          <div class="stay-connected-item">Ephesians 1 — "who we are now in Him"</div>
+          <div class="stay-connected-item">Philippians 2 — humility & Christ's example</div>
+          <div class="stay-connected-item">Romans 8 — life in the Spirit</div>
+          <div class="stay-connected-item">Psalms 1, 23, 34, & 103</div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-card-icon">🤝</div>
+        <div class="resource-card-title">Stay Connected</div>
+        <div class="resource-card-body">For the long journey ahead:</div>
+        <div class="stay-connected-list">
+          <div class="stay-connected-item">Continue praying together</div>
+          <div class="stay-connected-item">Share meaningful moments from your own walk</div>
+          <div class="stay-connected-item">Encourage connection with other believers</div>
+          <div class="stay-connected-item">Be prepared for small victories and setbacks</div>
+          <div class="stay-connected-item">Celebrate as they start making other relationships — we need all parts of the body</div>
+        </div>
+      </div>
+
+      <button class="reset-btn" onclick="confirmReset()">Reset Progress & Start Over</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     INSTALL BAR
+══════════════════════════════════════ -->
+<div id="install-bar-wrap" class="hidden">
+
+<div id="install-bar" onclick="openInstallModal()">
+  <div class="install-bar-inner">
+    <img class="install-bar-logo" src="/icons/hf-logo.png" alt="HF">
+    <span class="install-bar-text">Install the App</span>
+    <span class="install-bar-arrow">↑</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     INSTALL MODAL
+══════════════════════════════════════ -->
+<div id="install-modal" class="hidden">
+  <div class="install-modal-box">
+    <div class="install-modal-handle"></div>
+    <div class="install-modal-header">
+      <img class="install-modal-icon" src="/icons/icon-192.png" alt="First Steps">
+      <div>
+        <div class="install-modal-app-name">First Steps</div>
+        <div class="install-modal-app-sub">Harrison Faith Church</div>
+      </div>
+    </div>
+    <div class="install-steps">
+      <div class="install-step">
+        <div class="install-step-num">1</div>
+        <div>Tap your browser's share icon &nbsp;<span class="install-step-icon">⬆️</span></div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">2</div>
+        <div>Scroll down and select <strong style="color:var(--white)">"Add to Home Screen"</strong></div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">3</div>
+        <div>Tap <strong style="color:var(--white)">"Add"</strong></div>
+      </div>
+    </div>
+    <div class="install-found">Once installed, find it in your App Library.</div>
+    <button class="install-btn-done" onclick="closeInstallModal()">Done</button>
+    <button class="install-btn-cancel" onclick="closeInstallModal()">Cancel</button>
+    <div class="install-safari-note">Note: If your browser does not give you an "Add to Home Screen" option, you will need to open this page in Safari to install.</div>
+  </div>
+</div>
+
+</div><!-- /install-bar-wrap -->
+
+<!-- Toast -->
+<div class="copy-toast" id="copy-toast">Copied!</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const WEEKS = [
+  {
+    id: 1,
+    title: "Celebrate!",
+    subtitle: "Text, call, or visit within 24 hours",
+    actions: [
+      "Schedule a meal to sit down and talk — let them share their thoughts, questions, and feelings",
+      "Listen well",
+      "Tell them about the opportunity and priority of baptism",
+      "Let them hear you pray",
+      "Send a verse or passage as a starting point for them to begin learning"
+    ],
+    showRAP: false,
+    showBaptism: true,
+    verses: [
+      { ref: "Book of John", text: "A great starting point — the foundation of who Jesus is and what He came to do." },
+      { ref: "Ephesians 1", text: "Identity in Christ — who they now are in Him." },
+      { ref: "Philippians 2", text: "Humility and Christ's example for everyday life." },
+      { ref: "Romans 8", text: "Life in the Spirit — no condemnation, led by God." },
+      { ref: "Psalms 1, 23, 34, 103", text: "Foundational psalms full of comfort, praise, and trust." }
+    ]
+  },
+  {
+    id: 2,
+    title: "Walk Alongside",
+    subtitle: "Encourage, equip, and include",
+    actions: [
+      "Congratulate them on baptism (if they were baptized — don't be discouraged if not, there will be more opportunities!)",
+      "Bring them to a group setting with other believers, church-related or not",
+      "Send a verse or passage that will encourage them to keep studying God's Word",
+      "Keep the conversation going and listen well — use RAP below"
+    ],
+    showRAP: true,
+    showBaptism: false,
+    verses: [
+      { ref: "Galatians 2:20", text: "I have been crucified with Christ. It is no longer I who live, but Christ who lives in me. And the life I now live in the flesh I live by faith in the Son of God, who loved me and gave himself for me." },
+      { ref: "Philippians 4:6-7", text: "Don't worry about anything; instead, pray about everything. Tell God what you need, and thank him for all he has done. Then you will experience God's peace, which exceeds anything we can understand." },
+      { ref: "Isaiah 26:3-4", text: "You keep him in perfect peace whose mind is stayed on you, because he trusts in you. Trust in the Lord forever, for the Lord God is an everlasting rock." }
+    ]
+  },
+  {
+    id: 3,
+    title: "Include in Your Life",
+    subtitle: "Invite them to your home, a meal, or a family event",
+    actions: [
+      "Demonstrate hospitality — slow down to engage, prioritize people; often including food",
+      "Bring them to a discipleship class or small group if not already coming",
+      "Send a worship song that means something to you and tell them why",
+      "Point out the outreach opportunity: Standing in the Gap, May 1–2",
+      "Keep the conversation going — use RAP below"
+    ],
+    showRAP: true,
+    showBaptism: false,
+    verses: [
+      { ref: "Psalm 103:1-5", text: "Let all that I am praise the Lord; with my whole heart, I will praise his holy name... He forgives all my sins and heals all my diseases. He redeems me from death and crowns me with love and tender mercies. He fills my life with good things." },
+      { ref: "Psalm 9:1-2", text: "I will praise you, Lord, with all my heart; I will tell of all the marvelous things you have done. I will be filled with joy because of you. I will sing praises to your name, O Most High." }
+    ]
+  },
+  {
+    id: 4,
+    title: "Teach New Outlook",
+    subtitle: "Share a story of forgiveness, love, patience, or obedience",
+    actions: [
+      "Encourage others-mindedness — help them see beyond themselves",
+      "Invite them to outreach (Standing in the Gap, May 1–2) if they haven't signed up yet",
+      "Help them get plugged in: Discipleship classes, LifeGroups, small groups",
+      "Encourage them to tell someone else their story",
+      "Pray with them — and encourage them to pray with and for you, too",
+      "RAP: Listen to how their life is changing"
+    ],
+    showRAP: true,
+    showBaptism: false,
+    verses: [
+      { ref: "Philippians 2:3-4", text: "Don't be selfish; don't try to impress others. Be humble, thinking of others as better than yourselves. Don't look out only for your own interests, but take an interest in others, too." },
+      { ref: "Matthew 20:25-28", text: "But among you it will be different. Whoever wants to be a leader among you must be your servant... For even the Son of Man came not to be served but to serve others and to give his life as a ransom for many." }
+    ]
+  }
+];
+
+const STAY_CONNECTED_VERSES = [
+  { ref: "Romans 1:17", text: "This Good News tells us how God makes us right in his sight. This is accomplished from start to finish by faith. As the Scriptures say, 'It is through faith that a righteous person has life.'" },
+  { ref: "Hebrews 12:1-2", text: "Let us run with endurance the race God has set before us. We do this by keeping our eyes on Jesus, the champion who initiates and perfects our faith." },
+  { ref: "Proverbs 3:5-6", text: "Trust in the Lord with all your heart; do not depend on your own understanding. Seek his will in all you do, and he will show you which path to take." }
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+const KEY = 'l99_v1';
+let state = {
+  maker: '',
+  disciple: '',
+  currentWeek: 1,
+  startWeek: 1,
+  progress: { 1: [], 2: [], 3: [], 4: [] },
+  setupDone: false
+};
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(KEY);
+    if (s) state = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+let activeScreen = 'onboard';
+let rapReturnWeek = null;
+
+function updateRapBackBtn() {
+  const btn = document.getElementById('rap-back-btn');
+  if (!btn) return;
+  if (rapReturnWeek) {
+    btn.textContent = '‹ Back';
+  } else {
+    btn.textContent = '‹ Home';
+  }
+}
+
+function rapBack() {
+  if (rapReturnWeek) {
+    const w = rapReturnWeek;
+    rapReturnWeek = null;
+    navigate('week', w);
+  } else {
+    navigate('home');
+  }
+}
+
+function navigate(screenId, param) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screenId).classList.add('active');
+  activeScreen = screenId;
+
+  const wrap = document.getElementById('install-bar-wrap');
+  const isMain = ['home','verses','rap','resources'].includes(screenId);
+  wrap.classList.toggle('hidden', !isMain);
+
+  if (screenId === 'home') renderHome();
+  if (screenId === 'week') renderWeekDetail(param);
+  if (screenId === 'verses') renderVerses();
+  if (screenId === 'resources') renderResources();
+}
+
+// ══════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════
+let selectedStartWeek = 1;
+
+function selectWeek(n) {
+  selectedStartWeek = n;
+  document.querySelectorAll('.ob-week-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.week) === n);
+  });
+}
+
+function startApp() {
+  const maker = document.getElementById('ob-maker').value.trim();
+  const disciple = document.getElementById('ob-disciple').value.trim();
+  if (!maker || !disciple) {
+    alert('Please enter both names to continue.');
+    return;
+  }
+  state.maker = maker;
+  state.disciple = disciple;
+  state.currentWeek = selectedStartWeek;
+  state.startWeek = selectedStartWeek;
+  state.setupDone = true;
+  saveState();
+  navigate('home');
+}
+
+// ══════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════
+function renderHome() {
+  const week = WEEKS[state.currentWeek - 1];
+  document.getElementById('home-name').textContent = state.disciple + ' 👋';
+  document.getElementById('week-card-title').textContent = week.title;
+  document.getElementById('week-card-sub').textContent = week.subtitle;
+
+  // Progress pips
+  const pips = document.getElementById('progress-pips');
+  pips.innerHTML = '';
+  for (let i = 1; i <= 4; i++) {
+    const p = document.createElement('div');
+    p.className = 'pip' + (i < state.currentWeek ? ' done' : i === state.currentWeek ? ' active' : '');
+    pips.appendChild(p);
+  }
+  document.getElementById('progress-label').innerHTML =
+    `<strong>Week ${state.currentWeek} of 4</strong> — ${week.title}`;
+
+  // Week list
+  const list = document.getElementById('week-list');
+  list.innerHTML = '';
+  WEEKS.forEach(w => {
+    const prog = state.progress[w.id] || [];
+    const total = w.actions.length;
+    const done = prog.length;
+    const isActive = w.id === state.currentWeek;
+    const isPast = w.id < state.currentWeek;
+
+    const row = document.createElement('div');
+    row.className = 'week-row' + (isActive ? ' active-week' : '');
+    row.style.marginBottom = '8px';
+    row.onclick = () => navigate('week', w.id);
+
+    const dotClass = isPast ? 'done' : isActive ? 'active' : 'future';
+    const dotContent = isPast ? '✓' : w.id;
+    let statusText, statusClass = '';
+    if (isPast) { statusText = `Completed · ${done} of ${total} done`; }
+    else if (isActive) { statusText = `In Progress · ${done} of ${total} done`; statusClass = 'in-progress'; }
+    else { statusText = 'Up next'; }
+
+    row.innerHTML = `
+      <div class="week-dot ${dotClass}">${dotContent}</div>
+      <div class="week-info">
+        <div class="week-name">Week ${w.id}: ${w.title}</div>
+        <div class="week-status ${statusClass}">${statusText}</div>
+      </div>
+      <div class="week-arrow" style="${isActive ? 'color:var(--gold)' : ''}">›</div>`;
+    list.appendChild(row);
+  });
+
+  // Verse card
+  const verse = week.verses[0];
+  const verseCard = document.getElementById('home-verse-card');
+  verseCard.innerHTML = `
+    <div class="card-eyebrow">Verse to Share This Week</div>
+    <div class="verse-text">${verse.text}</div>
+    <div class="verse-ref-row">
+      <span>${verse.ref}</span>
+      <button class="verse-share-btn" onclick="copyText('${escapeJs(verse.ref + ' — ' + verse.text)}')">Copy to share →</button>
+    </div>`;
+}
+
+function openCurrentWeek() { navigate('week', state.currentWeek); }
+
+function showVerseShare() { navigate('verses'); }
+
+// ══════════════════════════════════════
+// WEEK DETAIL
+// ══════════════════════════════════════
+let detailWeekId = 1;
+
+function renderWeekDetail(weekId) {
+  detailWeekId = weekId || state.currentWeek;
+  const week = WEEKS[detailWeekId - 1];
+  const prog = state.progress[detailWeekId] || [];
+
+  document.getElementById('detail-eyebrow').textContent = 'Week ' + detailWeekId + ' of 4';
+  document.getElementById('detail-title').textContent = week.title;
+  document.getElementById('detail-sub').textContent = week.subtitle;
+
+  const content = document.getElementById('detail-content');
+  content.innerHTML = '';
+
+  // Checklist
+  const checkCard = document.createElement('div');
+  checkCard.className = 'checklist-card';
+  checkCard.innerHTML = `<div class="checklist-title">Action Steps</div>`;
+  week.actions.forEach((action, i) => {
+    const isChecked = prog.includes(i);
+    const item = document.createElement('div');
+    item.className = 'check-item';
+    item.onclick = () => toggleAction(detailWeekId, i);
+    item.innerHTML = `
+      <div class="check-box ${isChecked ? 'checked' : ''}" id="cb-${detailWeekId}-${i}">
+        <span class="check-checkmark">✓</span>
+      </div>
+      <div class="check-text ${isChecked ? 'done' : ''}" id="ct-${detailWeekId}-${i}">${action}</div>`;
+    checkCard.appendChild(item);
+  });
+  content.appendChild(checkCard);
+
+  // Advance week button (if all done and not on last week)
+  if (prog.length === week.actions.length && detailWeekId < 4 && detailWeekId === state.currentWeek) {
+    const advBtn = document.createElement('button');
+    advBtn.style.cssText = 'width:100%;background:var(--gold);color:var(--black);border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;';
+    advBtn.textContent = `Move to Week ${detailWeekId + 1} →`;
+    advBtn.onclick = () => { state.currentWeek = detailWeekId + 1; saveState(); navigate('home'); };
+    content.appendChild(advBtn);
+  }
+
+  // RAP card (weeks 2-4)
+  if (week.showRAP) {
+    const rapCard = document.createElement('div');
+    rapCard.className = 'rap-inline-card';
+    rapCard.onclick = () => { rapReturnWeek = detailWeekId; updateRapBackBtn(); navigate('rap'); };
+    rapCard.innerHTML = `
+      <div class="rap-inline-title">RAP — Conversation Guide</div>
+      <div class="rap-row"><strong>Review</strong> — What did God say to you this week?</div>
+      <div class="rap-row"><strong>Apply</strong> — How does that intersect with your life right now?</div>
+      <div class="rap-row"><strong>Pray</strong> — Pray about the application, not just a list of requests.</div>
+      <div class="rap-tap-hint">Tap for the full guide →</div>`;
+    content.appendChild(rapCard);
+  }
+
+  // Baptism info (week 1)
+  if (week.showBaptism) {
+    const baptismCard = document.createElement('div');
+    baptismCard.className = 'info-card';
+    baptismCard.innerHTML = `
+      <div class="info-card-title">💧 What is Baptism?</div>
+      <div class="info-card-body">Baptism is a public way Jesus' followers declare their decision to follow Him. Going under water symbolizes His death, burial, and resurrection. Being raised out is a picture of dying to our old lives and being brought into new life with Him.<br><br>God takes great joy when His children are baptized — just as He did when Jesus was baptized.</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button onclick="shareBaptismLink()" style="flex:1;background:var(--gold);color:var(--black);border:none;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:800;cursor:pointer;min-width:140px;">Send Baptism Link →</button>
+        <a href="https://www.biblegateway.com/passage/?search=matt+3%3A13-17&version=NLT" target="_blank" style="flex:1;background:var(--mid);color:var(--gold);border:1px solid rgba(201,169,110,0.2);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;min-width:120px;">Matthew 3:13-17</a>
+      </div>`;
+    content.appendChild(baptismCard);
+  }
+
+  // Suggested verses
+  const versesLabel = document.createElement('div');
+  versesLabel.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);padding:2px 2px 0;';
+  versesLabel.textContent = 'Suggested Reading';
+  content.appendChild(versesLabel);
+
+  const verseList = document.createElement('div');
+  verseList.className = 'verse-list';
+  week.verses.forEach(v => {
+    const pill = document.createElement('div');
+    pill.className = 'verse-pill';
+    pill.innerHTML = `
+      <div class="verse-pill-ref">${v.ref}</div>
+      <div class="verse-pill-text">${v.text}</div>
+      <div class="verse-pill-copy">Tap to copy →</div>`;
+    pill.onclick = () => copyText(v.ref + ' — ' + v.text);
+    verseList.appendChild(pill);
+  });
+  content.appendChild(verseList);
+}
+
+function toggleAction(weekId, index) {
+  const prog = state.progress[weekId] || [];
+  const idx = prog.indexOf(index);
+  if (idx === -1) { prog.push(index); } else { prog.splice(idx, 1); }
+  state.progress[weekId] = prog;
+  saveState();
+
+  // Update UI
+  const box = document.getElementById(`cb-${weekId}-${index}`);
+  const text = document.getElementById(`ct-${weekId}-${index}`);
+  const isChecked = prog.includes(index);
+  if (box) box.classList.toggle('checked', isChecked);
+  if (text) text.classList.toggle('done', isChecked);
+
+  // Re-render to show/hide advance button
+  renderWeekDetail(weekId);
+}
+
+// ══════════════════════════════════════
+// VERSE LIBRARY
+// ══════════════════════════════════════
+function renderVerses() {
+  const container = document.getElementById('verses-content');
+  container.innerHTML = '';
+
+  WEEKS.forEach(week => {
+    const section = document.createElement('div');
+    const label = document.createElement('div');
+    label.className = 'verses-section-title';
+    label.textContent = `Week ${week.id}: ${week.title}`;
+    section.appendChild(label);
+
+    const list = document.createElement('div');
+    list.className = 'verse-list';
+    week.verses.forEach(v => {
+      const pill = document.createElement('div');
+      pill.className = 'verse-pill';
+      pill.innerHTML = `
+        <div class="verse-pill-ref">${v.ref}</div>
+        <div class="verse-pill-text">${v.text}</div>
+        <div class="verse-pill-copy">Tap to copy →</div>`;
+      pill.onclick = () => copyText(v.ref + ' — ' + v.text);
+      list.appendChild(pill);
+    });
+    section.appendChild(list);
+    container.appendChild(section);
+  });
+
+  // Stay Connected verses
+  const scLabel = document.createElement('div');
+  scLabel.className = 'verses-section-title';
+  scLabel.textContent = 'Stay Connected';
+  container.appendChild(scLabel);
+  const scList = document.createElement('div');
+  scList.className = 'verse-list';
+  STAY_CONNECTED_VERSES.forEach(v => {
+    const pill = document.createElement('div');
+    pill.className = 'verse-pill';
+    pill.innerHTML = `
+      <div class="verse-pill-ref">${v.ref}</div>
+      <div class="verse-pill-text">${v.text}</div>
+      <div class="verse-pill-copy">Tap to copy →</div>`;
+    pill.onclick = () => copyText(v.ref + ' — ' + v.text);
+    scList.appendChild(pill);
+  });
+  container.appendChild(scList);
+}
+
+// ══════════════════════════════════════
+// RESOURCES
+// ══════════════════════════════════════
+function renderResources() {
+  // Static HTML, nothing dynamic needed
+}
+
+function confirmReset() {
+  if (confirm('This will erase all progress and start over. Are you sure?')) {
+    localStorage.removeItem(KEY);
+    location.reload();
+  }
+}
+
+// ══════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════
+function openInstallModal() {
+  document.getElementById('install-modal').classList.remove('hidden');
+}
+
+function closeInstallModal() {
+  document.getElementById('install-modal').classList.add('hidden');
+}
+
+function shareBaptismLink() {
+  const url = 'https://harrisonfaith.info/baptism';
+  const msg = 'Here\'s the link to sign up for baptism at Harrison Faith: ' + url;
+  if (navigator.share) {
+    navigator.share({ title: 'Baptism at Harrison Faith', text: msg, url: url }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(() => showToast('Link copied!'));
+  } else {
+    showToast('Visit: harrisonfaith.info/baptism');
+  }
+}
+
+function copyText(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!')).catch(() => showToast('Tap & hold to copy'));
+  } else {
+    showToast('Tap & hold to copy');
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('copy-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function escapeJs(str) {
+  return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// ══════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════
+loadState();
+if (state.setupDone) {
+  navigate('home');
+} else {
+  navigate('onboard');
+}
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
